@@ -72,6 +72,14 @@ export const commentOnPost = async (req, res) => {
         }
         post.comments.push(comment);
         await post.save();
+        await post.populate({
+            path: "user",
+            select: "-password"
+        });
+        await post.populate({
+            path: "comments.user",
+            select: "-password"
+        });
         res.status(200).json(post)
 
     } catch (error) {
