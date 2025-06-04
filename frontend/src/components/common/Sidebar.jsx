@@ -36,7 +36,11 @@ const Sidebar = () => {
 		}
 	})
 
-	const {data:authUser} = useQuery({queryKey: ["authUser"],})
+	const authUser = useQueryClient().getQueryData(["authUser"]);
+
+	if (!authUser) {
+		return <LoadingSpinner size="sm" />;
+	}
 
 	return (
 		<div className='md:flex-[2_2_0] w-18 max-w-52'>

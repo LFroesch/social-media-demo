@@ -11,7 +11,11 @@ const CreatePost = () => {
 	const imgRef = useRef(null);
 
 	const queryClient = useQueryClient();
-	const {data:authUser} = useQuery({queryKey: ["authUser"]})
+	const authUser = useQueryClient().getQueryData(["authUser"]);
+
+	if (!authUser) {
+		return <LoadingSpinner size="sm" />;
+	}
 
 	const {mutate:createPost, isPending, isError, error} = useMutation({
 		mutationFn: async ({ text, img }) => {
