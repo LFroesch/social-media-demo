@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { data, Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { POSTS } from "../../utils/db/dummy";
 import Posts from "../../components/common/Posts";
@@ -12,6 +12,9 @@ import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date";
+import useFollow from "../../hooks/useFollow";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
 
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
@@ -22,13 +25,14 @@ const ProfilePage = () => {
 	const profileImgRef = useRef(null);
 
 	const {username} = useParams();
-
-	const authUser = useQueryClient().getQueryData(["authUser"]);
+	
+	const {follow, isPending} = useFollow();
+	const queryClient = useQueryClient(); // ADD THIS LINE
+	const authUser = queryClient.getQueryData(["authUser"]);
 	
 	if (!authUser) {
 		return <LoadingSpinner size="sm" />;
 	}
-	
 	
 	const {
 		data: user,
@@ -50,6 +54,13 @@ const ProfilePage = () => {
 			}
 		},
 	});
+	
+	const {updateProfile, isUpdatingProfile} = useUpdateUserProfile();
+	
+	const isMyProfile = authUser._id === user?._id;
+	const memberSinceDate = formatMemberSinceDate(user?.createdAt);
+	const amIFollowing = authUser?.following.includes(user?._id);
+	
 	const handleImgChange = (e, state) => {
 		const file = e.target.files[0];
 		if (file) {
@@ -61,13 +72,10 @@ const ProfilePage = () => {
 			reader.readAsDataURL(file);
 		}
 	};
-	
+
 	useEffect(() => {
 		refetch();
 	}, [username, refetch]);
-	
-	const isMyProfile = authUser._id === user?._id;
-	const memberSinceDate = formatMemberSinceDate(user?.createdAt);
 	
 	return (
 		<>
@@ -133,21 +141,27 @@ const ProfilePage = () => {
 								</div>
 							</div>
 							<div className='flex justify-end px-4 mt-5'>
-								{isMyProfile && <EditProfileModal />}
+								{isMyProfile && <EditProfileModal authUser={authUser}/>}
 								{!isMyProfile && (
 									<button
 										className='btn btn-outline rounded-full btn-sm'
-										onClick={() => alert("Followed successfully")}
+										onClick={() => follow(user?._id)}
 									>
-										Follow
+										{isPending && "Loading..."}
+										{!isPending && amIFollowing && "Unfollow"}
+										{!isPending && !amIFollowing && "Follow"}
 									</button>
 								)}
 								{(coverImg || profileImg) && (
 									<button
 										className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-										onClick={() => alert("Profile updated successfully")}
+										onClick={async () => {
+											await updateProfile({coverImg, profileImg})
+											setProfileImg(null);
+											setCoverImg(null);
+										}}
 									>
-										Update
+										{isUpdatingProfile ? "Updating..." : "Update"}
 									</button>
 								)}
 							</div>
@@ -165,12 +179,12 @@ const ProfilePage = () => {
 											<>
 												<FaLink className='w-3 h-3 text-slate-500' />
 												<a
-													href='https://youtube.com/@asaprogrammer_'
+													href={user.link.startsWith('http') ? user.link : `https://${user.link}`}
 													target='_blank'
 													rel='noreferrer'
 													className='text-sm text-blue-500 hover:underline'
 												>
-													youtube.com/@asaprogrammer_
+													{user?.link}
 												</a>
 											</>
 										</div>
