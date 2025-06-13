@@ -9,6 +9,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "./components/common/LoadingSpinner";
+import Footer from "./components/common/Footer";
 
 function App() {
   const { data: authUser, isLoading } = useQuery({
@@ -50,6 +51,7 @@ function App() {
         {/* Add more routes as needed */}
       </Routes>
       {authUser && <RightPanel />}
+      <Footer/>
       <Toaster />
     </div>
   )
