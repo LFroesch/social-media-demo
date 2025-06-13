@@ -39,6 +39,7 @@ function App() {
     )
   }
   return (
+    <>
     <div className='flex max-w-6xl mx-auto'>
       {/* Common Component, bc it's not wrapped with routes */}
       {authUser && <Sidebar />}
@@ -51,9 +52,10 @@ function App() {
         {/* Add more routes as needed */}
       </Routes>
       {authUser && <RightPanel />}
-      <Footer/>
-      <Toaster />
     </div>
+    <Toaster />
+    <Footer/>
+    </>
   )
 }
 
